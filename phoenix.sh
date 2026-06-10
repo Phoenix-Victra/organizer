@@ -137,6 +137,27 @@ ${git_status}
 ${git_log}
 NOTES
 
+    # Copy project files into a files/ subfolder, excluding build artifacts
+    local files_dir="${save_dir}/files"
+    mkdir -p "$files_dir"
+    if command -v rsync &>/dev/null; then
+      rsync -a --delete \
+        --exclude='.git' \
+        --exclude='node_modules' \
+        --exclude='venv' --exclude='.venv' \
+        --exclude='__pycache__' \
+        --exclude='dist' --exclude='build' --exclude='target' \
+        --exclude='*.log' --exclude='*.tmp' \
+        "${root}/" "${files_dir}/"
+    else
+      # fallback: plain copy without rsync
+      cp -r "${root}/." "${files_dir}/" 2>/dev/null || true
+      # remove noise folders if cp was used
+      rm -rf "${files_dir}/node_modules" "${files_dir}/.git" \
+             "${files_dir}/venv" "${files_dir}/__pycache__" \
+             "${files_dir}/dist" "${files_dir}/build" "${files_dir}/target" 2>/dev/null || true
+    fi
+
     filed+=("${type}/${project_name}")
   done < <(find_project_roots | sort)
 

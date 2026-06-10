@@ -45,20 +45,24 @@ Claude Code on Windows should be started from Git Bash so `$HOME` resolves corre
 
 ## Phoenix Work Layout
 
-All session notes are saved to `OneDrive/phoenix work/` categorized by project type:
-
 ```
 OneDrive/phoenix work/
   Node-JS/
-    my-app/SESSION_NOTES.md
+    my-app/
+      SESSION_NOTES.md    ← what was happening
+      files/              ← full working copy of the project (rsync, no build artifacts)
   Python/
-    data-pipeline/SESSION_NOTES.md
-  Rust/
-    cli-tool/SESSION_NOTES.md
-  ...
+    data-pipeline/
+      SESSION_NOTES.md
+      files/
+  organizer/              ← Claude Code projects: clone repo here so git pull = instant sync
+    SESSION_NOTES.md
+    (repo files via git)
 ```
 
-This folder is shared between Claude Code sessions and the `phoenix` terminal screen, so everything ends up in one place.
+**For Claude Code projects**: clone the repo into `OneDrive/phoenix work/<project>` so `git pull` syncs both the session notes and the working files at once.
+
+**For local projects**: the `phoenix` TUI rsyncs files into the `files/` subfolder automatically on wrap.
 
 ## Project Type Detection
 

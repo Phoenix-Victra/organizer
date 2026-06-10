@@ -15,10 +15,13 @@
 - [ ] Test `phoenix` TUI on Windows Git Bash — previous bug (silent exit) was fixed in last commit
 
 ## Next Steps
-1. Clone repo on Windows into `OneDrive/phoenix work/organizer` (or anywhere inside OneDrive)
-2. Run `git pull` after any Claude Code session to get fresh SESSION_NOTES.md
-3. Use `phoenix` TUI for local project scanning and pick-up
-4. Use Claude Code "wrap up" for AI-session notes — they push here and sync via git
+1. Clone repo on Windows into `OneDrive/phoenix work/organizer` — this gives you the working files AND session notes in one place
+   ```bash
+   git clone <repo-url> "~/OneDrive/phoenix work/organizer"
+   ```
+2. After each Claude Code session, run `git pull` in that folder — gets latest code + SESSION_NOTES.md
+3. Use `phoenix` TUI for local non-git projects — rsyncs working files + writes notes to `OneDrive/phoenix work/<Type>/<project>/files/`
+4. Add the `phoenix` alias to `~/.bashrc` and run it from Git Bash
 
 ## Key Decisions
 - **Remote sessions can't write to OneDrive directly** — SESSION_NOTES.md is committed to the repo and syncs via `git pull`
