@@ -3,7 +3,42 @@
 set -euo pipefail
 
 MODE="${1:-}"  # "wrap" or "pick"
-SEARCH_ROOTS=("${HOME}" "/home/user")
+
+# Build search roots — works in Git Bash on Windows and Linux/macOS
+_build_search_roots() {
+  local -a roots=("${HOME}")
+
+  # Git Bash on Windows: $HOME is /c/Users/<name>
+  # Add common Windows project locations
+  local win_home="${HOME}"
+  local candidates=(
+    "${win_home}/source"
+    "${win_home}/source/repos"
+    "${win_home}/repos"
+    "${win_home}/projects"
+    "${win_home}/dev"
+    "${win_home}/code"
+    "${win_home}/workspace"
+    "${win_home}/Documents/projects"
+    "${win_home}/Documents/repos"
+    "${win_home}/Desktop"
+    "/c/dev"
+    "/c/projects"
+    "/c/repos"
+    "/d/dev"
+    "/d/projects"
+    "/d/repos"
+  )
+
+  for c in "${candidates[@]}"; do
+    [[ -d "$c" ]] && roots+=("$c")
+  done
+
+  printf '%s\n' "${roots[@]}" | sort -u
+}
+
+SEARCH_ROOTS=()
+while IFS= read -r r; do SEARCH_ROOTS+=("$r"); done < <(_build_search_roots)
 
 # --- Type markers: maps filename -> project type label
 declare -A TYPE_MARKERS=(
