@@ -170,6 +170,40 @@ NOTES
   fi
 }
 
+# ── CLOSE ALL WINDOWS ─────────────────────────────────────────────────────────
+do_close_windows() {
+  echo ""
+  echo "  Closing open windows..."
+
+  # Close File Explorer windows gracefully via PowerShell COM
+  powershell.exe -NoProfile -Command \
+    "(New-Object -ComObject Shell.Application).Windows() | ForEach-Object { \$_.Quit() }" \
+    2>/dev/null || true
+
+  # Close common apps — order matters (editors before browsers)
+  local apps=(
+    "Code.exe"        # VS Code
+    "Cursor.exe"      # Cursor editor
+    "notepad.exe"
+    "chrome.exe"
+    "msedge.exe"
+    "firefox.exe"
+    "slack.exe"
+    "Teams.exe"
+  )
+
+  for app in "${apps[@]}"; do
+    taskkill.exe /IM "$app" /F 2>/dev/null || true
+  done
+
+  # Close other mintty (Git Bash) windows — leave the current one for last
+  powershell.exe -NoProfile -Command \
+    "Get-Process mintty -ErrorAction SilentlyContinue | Where-Object { \$_.Id -ne $PPID } | Stop-Process -Force" \
+    2>/dev/null || true
+
+  echo "  Done."
+}
+
 # ── PICK ──────────────────────────────────────────────────────────────────────
 do_pick() {
   local -a notes_files=()
@@ -234,8 +268,11 @@ main() {
         echo "  Scanning projects..."
         echo ""
         do_wrap
-        pause
-        break
+        do_close_windows
+        echo ""
+        echo "  All done. Closing this window..."
+        sleep 2
+        exit 0
         ;;
       pick|"pick up"|resume|"resume projects")
         clear_screen
