@@ -20,7 +20,7 @@ _find_onedrive() {
 }
 
 _ONEDRIVE="$(_find_onedrive)"
-PHOENIX_DIR="${_ONEDRIVE}/phoenix-work"
+PHOENIX_DIR="${_ONEDRIVE}/phoenix work"
 
 # ── Type markers ─────────────────────────────────────────────────────────────
 declare -A TYPE_MARKERS=(
