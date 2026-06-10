@@ -2,7 +2,25 @@
 # Phoenix Work — interactive session manager TUI
 # Compatible with Git Bash on Windows (MinTTY)
 
-PHOENIX_DIR="${HOME}/phoenix-work"
+# Auto-detect OneDrive folder (personal, work, or named variant)
+_find_onedrive() {
+  local candidates=(
+    "${HOME}/OneDrive"
+    "${HOME}/OneDrive - Victra"
+  )
+  # Also pick up any "OneDrive - *" variant dynamically
+  for d in "${HOME}"/OneDrive*; do
+    [[ -d "$d" ]] && candidates+=("$d")
+  done
+  for c in "${candidates[@]}"; do
+    [[ -d "$c" ]] && echo "$c" && return
+  done
+  # Fallback if no OneDrive found
+  echo "${HOME}"
+}
+
+_ONEDRIVE="$(_find_onedrive)"
+PHOENIX_DIR="${_ONEDRIVE}/phoenix-work"
 
 # ── Type markers ─────────────────────────────────────────────────────────────
 declare -A TYPE_MARKERS=(
@@ -180,6 +198,8 @@ main() {
     echo "  +-------------------------------+"
     echo "  |    Phoenix Work Manager       |"
     echo "  +-------------------------------+"
+    echo ""
+    echo "  Saving to: ${PHOENIX_DIR}"
     echo ""
     echo "    wrap   -- save all projects and close"
     echo "    pick   -- browse saved sessions"
