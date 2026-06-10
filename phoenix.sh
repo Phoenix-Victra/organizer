@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Phoenix Work — interactive session manager TUI
-set -euo pipefail
+# Compatible with Git Bash on Windows (MinTTY)
 
 PHOENIX_DIR="${HOME}/phoenix-work"
 
@@ -42,9 +42,8 @@ while IFS= read -r r; do SEARCH_ROOTS+=("$r"); done < <(_build_search_roots)
 detect_type() {
   local dir="$1"
   for marker in "${!TYPE_MARKERS[@]}"; do
-    ls "${dir}/${marker}" 2>/dev/null | grep -q . && echo "${TYPE_MARKERS[$marker]}" && return
+    [[ -f "${dir}/${marker}" ]] && echo "${TYPE_MARKERS[$marker]}" && return
   done
-  # fallback: check for .csproj
   ls "${dir}"/*.csproj 2>/dev/null | grep -q . && echo "CSharp" && return
   echo "Other"
 }
@@ -56,13 +55,12 @@ find_project_roots() {
     for marker in "${!TYPE_MARKERS[@]}"; do
       while IFS= read -r found; do
         local dir; dir="$(dirname "$found")"
-        echo "$dir" | grep -qE '(node_modules|\.git/|venv|\.venv|__pycache__|/dist/|/build/|/target/)' && continue
+        echo "$dir" | grep -qE '(node_modules|\.git|venv|\.venv|__pycache__|/dist|/build|/target)' && continue
         local already=0
         for s in "${seen[@]:-}"; do [[ "$s" == "$dir" ]] && already=1 && break; done
         [[ $already -eq 0 ]] && seen+=("$dir") && echo "$dir"
       done < <(find "$search_root" -maxdepth 5 -name "$marker" 2>/dev/null)
     done
-    # also catch .csproj
     while IFS= read -r found; do
       local dir; dir="$(dirname "$found")"
       local already=0
@@ -72,7 +70,13 @@ find_project_roots() {
   done
 }
 
-clear_screen() { printf '\033[H\033[2J'; }
+clear_screen() { clear 2>/dev/null || printf '\033[2J\033[H'; }
+
+pause() {
+  echo ""
+  printf "  Press Enter to continue..."
+  read -r
+}
 
 # ── WRAP ──────────────────────────────────────────────────────────────────────
 do_wrap() {
@@ -127,10 +131,9 @@ NOTES
   else
     echo "  Projects saved:"
     for entry in "${filed[@]}"; do
-      echo "    ✔  ${entry}"
+      echo "    + ${entry}"
     done
   fi
-  echo ""
 }
 
 # ── PICK ──────────────────────────────────────────────────────────────────────
@@ -142,31 +145,29 @@ do_pick() {
   if [[ ${#notes_files[@]} -eq 0 ]]; then
     echo ""
     echo "  No saved sessions found in ${PHOENIX_DIR}"
-    echo ""
+    echo "  Run 'wrap' first to save your projects."
     return
   fi
 
   echo ""
-  echo "  ── Saved Projects ──────────────────────────────"
+  echo "  -- Saved Projects ----------------------------------"
   echo ""
 
   for f in "${notes_files[@]}"; do
-    local rel; rel="${f#${PHOENIX_DIR}/}"   # e.g. Node-JS/my-app/SESSION_NOTES.md
+    local rel; rel="${f#${PHOENIX_DIR}/}"
     local category; category="$(echo "$rel" | cut -d/ -f1)"
     local project;  project="$(echo "$rel"  | cut -d/ -f2)"
     echo "  [${category}] ${project}"
 
-    # Print Next Steps only for brevity
     local in_next=0
     while IFS= read -r line; do
       [[ "$line" == "## Next Steps" ]] && in_next=1 && continue
       [[ "$line" == "## "* ]] && in_next=0
-      [[ $in_next -eq 1 && -n "$line" ]] && echo "      → ${line}"
+      [[ $in_next -eq 1 && -n "$line" ]] && echo "      -> ${line}"
     done < "$f"
     echo ""
   done
-  echo "  ────────────────────────────────────────────────"
-  echo ""
+  echo "  ----------------------------------------------------"
 }
 
 # ── TUI LOOP ──────────────────────────────────────────────────────────────────
@@ -176,45 +177,44 @@ main() {
   while true; do
     clear_screen
     echo ""
-    echo "  ╔═══════════════════════════════╗"
-    echo "  ║     Phoenix Work Manager      ║"
-    echo "  ╚═══════════════════════════════╝"
+    echo "  +-------------------------------+"
+    echo "  |    Phoenix Work Manager       |"
+    echo "  +-------------------------------+"
     echo ""
-    echo "    wrap   — save all projects & close"
-    echo "    pick   — browse saved sessions"
-    echo "    quit   — exit without saving"
+    echo "    wrap   -- save all projects and close"
+    echo "    pick   -- browse saved sessions"
+    echo "    quit   -- exit without saving"
     echo ""
     printf "  > "
     read -r cmd
 
-    case "${cmd,,}" in
+    # lowercase
+    cmd="$(echo "$cmd" | tr '[:upper:]' '[:lower:]' | xargs)"
+
+    case "$cmd" in
       wrap|"end session"|"wrap up")
         clear_screen
         echo ""
         echo "  Scanning projects..."
         echo ""
         do_wrap
-        echo "  Press any key to exit."
-        read -r -n1
+        pause
         break
         ;;
-      pick|"pick up"|"resume"|"resume projects")
+      pick|"pick up"|resume|"resume projects")
         clear_screen
         do_pick
-        echo "  Press any key to return."
-        read -r -n1
+        pause
         ;;
       quit|exit|q)
         clear_screen
         break
         ;;
       *)
-        # unknown — stay in loop, show brief error on next render
-        printf '\033[H\033[2J'
+        clear_screen
         echo ""
-        echo "  Unknown command: '${cmd}'"
-        echo "  Try: wrap  pick  quit"
-        echo ""
+        echo "  Unknown: '${cmd}'"
+        echo "  Commands: wrap  pick  quit"
         sleep 1
         ;;
     esac
