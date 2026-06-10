@@ -3,9 +3,14 @@
 
 MODE="${1:-}"  # "wrap" or "pick"
 
-# Auto-detect OneDrive and resolve phoenix work folder
+# Find the OneDrive folder that already contains "phoenix work"
 _find_onedrive() {
-  for d in "${HOME}"/OneDrive*; do [[ -d "$d" ]] && echo "$d" && return; done
+  for d in "${HOME}"/OneDrive*; do
+    [[ -d "${d}/phoenix work" ]] && echo "$d" && return
+  done
+  for d in "${HOME}"/OneDrive*; do
+    [[ -d "$d" ]] && echo "$d" && return
+  done
   echo "${HOME}"
 }
 PHOENIX_DIR="$(_find_onedrive)/phoenix work"

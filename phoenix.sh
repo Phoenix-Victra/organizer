@@ -2,20 +2,15 @@
 # Phoenix Work — interactive session manager TUI
 # Compatible with Git Bash on Windows (MinTTY)
 
-# Auto-detect OneDrive folder (personal, work, or named variant)
+# Find the OneDrive folder that already contains "phoenix work"
 _find_onedrive() {
-  local candidates=(
-    "${HOME}/OneDrive"
-    "${HOME}/OneDrive - Victra"
-  )
-  # Also pick up any "OneDrive - *" variant dynamically
   for d in "${HOME}"/OneDrive*; do
-    [[ -d "$d" ]] && candidates+=("$d")
+    [[ -d "${d}/phoenix work" ]] && echo "$d" && return
   done
-  for c in "${candidates[@]}"; do
-    [[ -d "$c" ]] && echo "$c" && return
+  # Fallback: first OneDrive found
+  for d in "${HOME}"/OneDrive*; do
+    [[ -d "$d" ]] && echo "$d" && return
   done
-  # Fallback if no OneDrive found
   echo "${HOME}"
 }
 
