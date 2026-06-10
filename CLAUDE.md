@@ -6,13 +6,13 @@
 
 Run the wrap workflow:
 
-1. Execute `bash /home/user/organizer/session-manager.sh wrap` to auto-detect all projects and scaffold SESSION_NOTES.md in each root.
-2. For **each detected project**, enrich its SESSION_NOTES.md with real context from the current session:
+1. Execute `bash ~/organizer/session-manager.sh wrap` — this auto-detects projects and scaffolds SESSION_NOTES.md files, saved to **OneDrive/phoenix work/** categorized by project type.
+2. For **the current Claude Code project**, enrich its SESSION_NOTES.md with real context from this session:
    - **In Progress**: what was actively being worked on right now
    - **Open TODOs**: unresolved tasks, failing tests, open issues
    - **Next Steps**: concrete next actions
    - **Key Decisions**: any architectural or design choices made this session
-3. Print a clean summary of every project filed away.
+3. Print a clean summary of every project filed away, including the OneDrive save path.
 
 ### "pick up" / "resume projects"
 
@@ -44,10 +44,10 @@ Claude Code on Windows should be started from Git Bash so `$HOME` resolves corre
 
 ## Phoenix Work Layout
 
-All session notes are saved to `~/phoenix-work/` categorized by project type:
+All session notes are saved to `OneDrive/phoenix work/` categorized by project type:
 
 ```
-~/phoenix-work/
+OneDrive/phoenix work/
   Node-JS/
     my-app/SESSION_NOTES.md
   Python/
@@ -56,6 +56,8 @@ All session notes are saved to `~/phoenix-work/` categorized by project type:
     cli-tool/SESSION_NOTES.md
   ...
 ```
+
+This folder is shared between Claude Code sessions and the `phoenix` terminal screen, so everything ends up in one place.
 
 ## Project Type Detection
 

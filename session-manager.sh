@@ -1,8 +1,14 @@
 #!/usr/bin/env bash
 # Session manager — auto-detects project roots by type marker and manages SESSION_NOTES.md
-set -euo pipefail
 
 MODE="${1:-}"  # "wrap" or "pick"
+
+# Auto-detect OneDrive and resolve phoenix work folder
+_find_onedrive() {
+  for d in "${HOME}"/OneDrive*; do [[ -d "$d" ]] && echo "$d" && return; done
+  echo "${HOME}"
+}
+PHOENIX_DIR="$(_find_onedrive)/phoenix work"
 
 # Build search roots — works in Git Bash on Windows and Linux/macOS
 _build_search_roots() {
@@ -95,19 +101,23 @@ do_wrap() {
   timestamp="$(date '+%Y-%m-%d %H:%M')"
   local -a filed=()
 
+  mkdir -p "${PHOENIX_DIR}"
+
   while IFS= read -r root; do
     [[ -z "$root" ]] && continue
     local type
     type="$(detect_type "$root")"
-    local notes_file="${root}/SESSION_NOTES.md"
     local project_name
     project_name="$(basename "$root")"
+    local save_dir="${PHOENIX_DIR}/${type}/${project_name}"
+    mkdir -p "$save_dir"
+    local notes_file="${save_dir}/SESSION_NOTES.md"
 
-    # Build or update the notes file
     cat > "$notes_file" <<NOTES
 # Session Notes — ${project_name}
 
 **Type:** ${type}
+**Source path:** ${root}
 **Last updated:** ${timestamp}
 
 ## In Progress
@@ -133,18 +143,19 @@ $(cd "$root" && git status --short 2>/dev/null || echo "Not a git repo")
 $(cd "$root" && git log --oneline -5 2>/dev/null || echo "No commits")
 NOTES
 
-    filed+=("${project_name} [${type}] → ${notes_file}")
+    filed+=("${type}/${project_name}")
   done < <(find_project_roots)
 
   echo ""
   echo "── Session wrapped at ${timestamp} ──"
+  echo "   Saved to: ${PHOENIX_DIR}"
   echo ""
   if [[ ${#filed[@]} -eq 0 ]]; then
     echo "No projects detected."
   else
     echo "Filed SESSION_NOTES.md for:"
     for entry in "${filed[@]}"; do
-      echo "  • ${entry}"
+      echo "  + ${entry}"
     done
   fi
 }
@@ -153,13 +164,9 @@ NOTES
 do_pick() {
   local -a found=()
 
-  for search_root in "${SEARCH_ROOTS[@]}"; do
-    [[ -d "$search_root" ]] || continue
-    while IFS= read -r notes_file; do
-      found+=("$notes_file")
-    done < <(find "$search_root" -maxdepth 6 -name "SESSION_NOTES.md" \
-               ! -path "*/node_modules/*" ! -path "*/.git/*" 2>/dev/null | sort)
-  done
+  while IFS= read -r notes_file; do
+    found+=("$notes_file")
+  done < <(find "${PHOENIX_DIR}" -name "SESSION_NOTES.md" 2>/dev/null | sort)
 
   if [[ ${#found[@]} -eq 0 ]]; then
     echo "No SESSION_NOTES.md files found."
