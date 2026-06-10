@@ -173,35 +173,57 @@ NOTES
 # ── CLOSE ALL WINDOWS ─────────────────────────────────────────────────────────
 do_close_windows() {
   echo ""
-  echo "  Closing open windows..."
+  echo "  Closing open windows gracefully..."
 
-  # Close File Explorer windows gracefully via PowerShell COM
+  # Step 1: Close File Explorer windows via COM (graceful, no data loss)
   powershell.exe -NoProfile -Command \
     "(New-Object -ComObject Shell.Application).Windows() | ForEach-Object { \$_.Quit() }" \
     2>/dev/null || true
 
-  # Close common apps — order matters (editors before browsers)
-  local apps=(
-    "Code.exe"        # VS Code
-    "Cursor.exe"      # Cursor editor
-    "notepad.exe"
-    "chrome.exe"
-    "msedge.exe"
-    "firefox.exe"
-    "slack.exe"
-    "Teams.exe"
-  )
+  # Step 2: Send graceful close signal to all common apps (like clicking X)
+  # CloseMainWindow() triggers save dialogs — no data gets lost
+  powershell.exe -NoProfile -Command "
+    \$apps = @(
+      'Code','Cursor','notepad','Notepad++',
+      'chrome','msedge','firefox','opera',
+      'slack','Teams','Discord',
+      'OUTLOOK','WINWORD','EXCEL','POWERPNT',
+      'WindowsTerminal','wt'
+    )
+    foreach (\$name in \$apps) {
+      Get-Process \$name -ErrorAction SilentlyContinue |
+        ForEach-Object { \$_.CloseMainWindow() | Out-Null }
+    }
+  " 2>/dev/null || true
 
-  for app in "${apps[@]}"; do
-    taskkill.exe /IM "$app" /F 2>/dev/null || true
-  done
+  # Step 3: Wait for apps to finish saving and close on their own
+  echo "  Waiting for apps to finish saving..."
+  sleep 4
 
-  # Close other mintty (Git Bash) windows — leave the current one for last
-  powershell.exe -NoProfile -Command \
-    "Get-Process mintty -ErrorAction SilentlyContinue | Where-Object { \$_.Id -ne $PPID } | Stop-Process -Force" \
-    2>/dev/null || true
+  # Step 4: Force close anything still running
+  powershell.exe -NoProfile -Command "
+    \$apps = @(
+      'Code','Cursor','notepad','Notepad++',
+      'chrome','msedge','firefox','opera',
+      'slack','Teams','Discord',
+      'OUTLOOK','WINWORD','EXCEL','POWERPNT',
+      'WindowsTerminal','wt'
+    )
+    foreach (\$name in \$apps) {
+      Get-Process \$name -ErrorAction SilentlyContinue | Stop-Process -Force
+    }
+  " 2>/dev/null || true
 
-  echo "  Done."
+  # Step 5: Close other Git Bash / mintty windows (not this one)
+  powershell.exe -NoProfile -Command "
+    Get-Process mintty,bash -ErrorAction SilentlyContinue |
+      Where-Object { \$_.Id -ne $PPID -and \$_.Id -ne $$ } |
+      ForEach-Object { \$_.CloseMainWindow() | Out-Null }
+  " 2>/dev/null || true
+
+  sleep 1
+
+  echo "  All windows closed."
 }
 
 # ── PICK ──────────────────────────────────────────────────────────────────────
