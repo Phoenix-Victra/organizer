@@ -29,19 +29,33 @@ Install once — run these in **Git Bash**:
 
 ```bash
 # 1. Clone (or pull) this repo somewhere permanent
-git clone <repo-url> ~/organizer   # or wherever you like
+git clone <repo-url> ~/organizer
 
-# 2. Make the script executable
-chmod +x ~/organizer/session-manager.sh
+# 2. Make scripts executable
+chmod +x ~/organizer/phoenix.sh ~/organizer/session-manager.sh
 
 # 3. Add a shortcut to your Git Bash profile
-echo 'alias session-wrap="bash ~/organizer/session-manager.sh wrap"' >> ~/.bashrc
-echo 'alias session-pick="bash ~/organizer/session-manager.sh pick"' >> ~/.bashrc
+echo 'alias phoenix="bash ~/organizer/phoenix.sh"' >> ~/.bashrc
 source ~/.bashrc
 ```
 
-After that, run `session-wrap` or `session-pick` directly in Git Bash whenever needed.
+Then just type `phoenix` in Git Bash to open the interactive screen.
 Claude Code on Windows should be started from Git Bash so `$HOME` resolves correctly.
+
+## Phoenix Work Layout
+
+All session notes are saved to `~/phoenix-work/` categorized by project type:
+
+```
+~/phoenix-work/
+  Node-JS/
+    my-app/SESSION_NOTES.md
+  Python/
+    data-pipeline/SESSION_NOTES.md
+  Rust/
+    cli-tool/SESSION_NOTES.md
+  ...
+```
 
 ## Project Type Detection
 
