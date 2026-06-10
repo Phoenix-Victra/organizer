@@ -6,13 +6,14 @@
 
 Run the wrap workflow:
 
-1. Execute `bash ~/organizer/session-manager.sh wrap` — this auto-detects projects and scaffolds SESSION_NOTES.md files, saved to **OneDrive/phoenix work/** categorized by project type.
-2. For **the current Claude Code project**, enrich its SESSION_NOTES.md with real context from this session:
+1. Write `SESSION_NOTES.md` directly into the **current project's repo root** with real session context:
    - **In Progress**: what was actively being worked on right now
    - **Open TODOs**: unresolved tasks, failing tests, open issues
    - **Next Steps**: concrete next actions
    - **Key Decisions**: any architectural or design choices made this session
-3. Print a clean summary of every project filed away, including the OneDrive save path.
+2. Commit and push `SESSION_NOTES.md` so it syncs to the user's local machine on next `git pull`.
+3. Remind the user: `git pull` in Git Bash to get the notes into their local repo (which should live inside OneDrive).
+4. Print a clean summary of what was filed.
 
 ### "pick up" / "resume projects"
 
