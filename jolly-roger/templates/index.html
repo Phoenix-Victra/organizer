@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block title %}Jolly Roger Reviews{% endblock %}
+{% block content %}
+<div class="filter-bar">
+  <a href="/" class="{{ 'active' if not status_filter }}">All ({{ counts.total }})</a>
+  <a href="/?status=drafted" class="{{ 'active' if status_filter == 'drafted' }}">
+    Needs Approval ({{ counts.drafted }})</a>
+  <a href="/?status=new" class="{{ 'active' if status_filter == 'new' }}">New ({{ counts.new }})</a>
+  <a href="/?status=posted" class="{{ 'active' if status_filter == 'posted' }}">Posted ({{ counts.posted }})</a>
+  <a href="/?status=rejected" class="{{ 'active' if status_filter == 'rejected' }}">Rejected ({{ counts.rejected }})</a>
+  <a href="/?status=skipped" class="{{ 'active' if status_filter == 'skipped' }}">Skipped ({{ counts.skipped }})</a>
+</div>
+
+{% if not reviews %}
+  <div class="empty">No reviews in this category.</div>
+{% endif %}
+
+{% for r in reviews %}
+<div class="card">
+  <div style="display:flex;justify-content:space-between;align-items:flex-start">
+    <div>
+      <span class="stars">{{ '★' * r.star_rating }}{{ '☆' * (5 - r.star_rating) }}</span>
+      <strong style="margin-left:8px">{{ r.author }}</strong>
+      {% if r.sensitive %}<span class="badge badge-sensitive">⚠ Sensitive</span>{% endif %}
+      <span class="badge badge-{{ r.status }}" style="margin-left:8px">{{ r.status }}</span>
+    </div>
+    <div class="meta">{{ r.created_at[:10] }}</div>
+  </div>
+
+  {% if r.comment %}
+  <div class="comment-text" style="margin-top:12px">{{ r.comment }}</div>
+  {% else %}
+  <p class="meta" style="margin-top:8px">(no written comment)</p>
+  {% endif %}
+
+  {% if r.draft_reply %}
+  <p style="margin:14px 0 4px;font-size:.85rem;color:#555;font-weight:600">Suggested reply:</p>
+  <div class="comment-text" style="border-left-color:#3498db">{{ r.draft_reply }}</div>
+  {% endif %}
+
+  {% if r.status in ['new', 'drafted'] %}
+  <div style="margin-top:14px">
+    <a href="/review/{{ r.review_id }}" class="btn btn-primary">Review &amp; Approve →</a>
+  </div>
+  {% elif r.status == 'posted' %}
+  <p class="meta" style="margin-top:10px">Posted {{ r.posted_at[:10] if r.posted_at }}</p>
+  {% endif %}
+</div>
+{% endfor %}
+{% endblock %}

@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% block title %}Review — {{ review.author }}{% endblock %}
+{% block content %}
+<a href="/" class="btn btn-secondary" style="margin-bottom:20px">← Back</a>
+
+<div class="card">
+  <div style="display:flex;justify-content:space-between;align-items:flex-start">
+    <div>
+      <span class="stars">{{ '★' * review.star_rating }}{{ '☆' * (5 - review.star_rating) }}</span>
+      <strong style="margin-left:8px;font-size:1.1rem">{{ review.author }}</strong>
+      {% if review.sensitive %}
+      <span class="badge badge-sensitive">⚠ Sensitive — handle with extra care</span>
+      {% endif %}
+      <span class="badge badge-{{ review.status }}" style="margin-left:8px">{{ review.status }}</span>
+    </div>
+    <div class="meta">{{ review.created_at[:10] }}</div>
+  </div>
+
+  {% if review.comment %}
+  <div class="comment-text" style="margin-top:16px">{{ review.comment }}</div>
+  {% else %}
+  <p class="meta" style="margin-top:10px">(no written comment)</p>
+  {% endif %}
+</div>
+
+{% if review.status in ['new', 'drafted'] %}
+<div class="card">
+  <h2 class="section">Approve / Edit Reply</h2>
+  {% if review.sensitive %}
+  <p style="color:#721c24;background:#f8d7da;padding:10px;border-radius:5px;margin-bottom:16px">
+    ⚠ This review is flagged as sensitive. Please review the draft carefully — consider
+    reaching out directly to the guest before (or instead of) posting a public reply.
+  </p>
+  {% endif %}
+
+  <form method="post" action="/review/{{ review.review_id }}/approve">
+    <label style="font-weight:600;display:block;margin-bottom:6px">Reply text:</label>
+    <textarea name="reply" rows="6">{{ review.draft_reply or '' }}</textarea>
+    <div style="margin-top:14px;display:flex;gap:10px;flex-wrap:wrap">
+      <button type="submit" class="btn btn-success">✓ Approve &amp; Post</button>
+    </div>
+  </form>
+
+  <form method="post" action="/review/{{ review.review_id }}/reject" style="margin-top:10px">
+    <button type="submit" class="btn btn-danger"
+            onclick="return confirm('Skip posting any reply to this review?')">
+      ✗ Reject (no reply)
+    </button>
+  </form>
+</div>
+
+{% elif review.status == 'posted' %}
+<div class="card">
+  <h2 class="section">Posted Reply</h2>
+  <div class="comment-text" style="border-left-color:#28a745">{{ review.final_reply }}</div>
+  <p class="meta" style="margin-top:8px">Posted {{ review.posted_at }}</p>
+</div>
+
+{% elif review.status == 'rejected' %}
+<div class="card">
+  <p style="color:#721c24">This review was rejected — no reply was posted.</p>
+</div>
+{% endif %}
+{% endblock %}
